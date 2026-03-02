@@ -1,10 +1,14 @@
 import os
 from typing import Annotated, Literal
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class AgentState(BaseModel):
@@ -15,6 +19,7 @@ def create_model() -> ChatOpenAI:
     return ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
         temperature=0.7,
     )
 
