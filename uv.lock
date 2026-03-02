@@ -15,6 +15,7 @@ dependencies = [
     { name = "langchain-openai" },
     { name = "langgraph" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "streamlit" },
 ]
 
@@ -29,6 +30,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=0.2.0" },
     { name = "langgraph", specifier = ">=0.2.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "requests", specifier = ">=2.31.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
     { name = "streamlit", specifier = ">=1.40.0" },
 ]
