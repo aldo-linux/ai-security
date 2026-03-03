@@ -9,6 +9,8 @@ from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel
 import requests
 
+from ai_security.auth import validate_tool_access, validate_tool_access_with_context, is_authenticated, auth0_manager
+
 load_dotenv()
 
 
@@ -93,6 +95,31 @@ def delete_user(user_id: int) -> str:
 tools = [get_all_users, get_user, create_user, update_user, delete_user]
 
 
+class AuthToolNode(ToolNode):
+    def __init__(self, tools, user_role=None):
+        super().__init__(tools)
+        self.user_role = user_role
+
+    def invoke(self, inputs, config=None):
+        # Handle both dict and AgentState object formats
+        messages = inputs.get("messages", []) if isinstance(inputs, dict) else inputs.messages
+        last_message = messages[-1]
+        if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+            for tool_call in last_message.tool_calls:
+                tool_name = tool_call.get("name")
+                if not validate_tool_access_with_context(tool_name, self.user_role):
+                    raise PermissionError(
+                        f"Access denied: You don't have permission to execute '{tool_name}'. "
+                        f"Admin role is required for this operation."
+                    )
+        return super().invoke(inputs, config)
+
+
+def create_auth_tool_node(user_role=None):
+    """Factory function to create an AuthToolNode with user context."""
+    return AuthToolNode(tools, user_role=user_role)
+
+
 def create_model() -> ChatOpenAI:
     model = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
@@ -116,11 +143,12 @@ def call_model(state: AgentState):
     return {"messages": [response]}
 
 
-def create_agent():
+def create_agent(user_role=None):
     workflow = StateGraph(AgentState)
+    auth_tool_node = create_auth_tool_node(user_role)
 
     workflow.add_node("agent", call_model)
-    workflow.add_node("tools", ToolNode(tools))
+    workflow.add_node("tools", auth_tool_node)
 
     workflow.set_entry_point("agent")
     workflow.add_conditional_edges(
@@ -136,10 +164,17 @@ def create_agent():
     return workflow.compile()
 
 
-graph = create_agent()
+# Note: graph is now created dynamically with user context in run_agent()
 
 
-def run_agent(user_input: str, history: list = None) -> str:
+def run_agent(user_input: str, history: list = None, user_role: str = None) -> str:
+    """Run the agent with user context.
+    
+    Args:
+        user_input: The user's input message
+        history: Previous conversation history
+        user_role: The authenticated user's role (e.g., 'admin', 'user')
+    """
     if history is None:
         history = []
 
@@ -152,5 +187,7 @@ def run_agent(user_input: str, history: list = None) -> str:
 
     messages.append(HumanMessage(content=user_input))
 
+    # Create agent graph with user context
+    graph = create_agent(user_role=user_role)
     result = graph.invoke({"messages": messages})
     return result["messages"][-1].content

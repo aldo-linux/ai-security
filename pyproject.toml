@@ -11,6 +11,9 @@ dependencies = [
     "langchain-openai>=0.2.0",
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
+    "PyJWT>=2.8.0",
+    "cryptography>=41.0.0",
+    "auth0-python>=4.0.0",
 ]
 
 [project.optional-dependencies]
