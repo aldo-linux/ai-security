@@ -17,13 +17,6 @@ AUTH0_CALLBACK_URL = os.getenv("AUTH0_CALLBACK_URL", "http://localhost:8501/call
 AUTH0_ADMIN_ROLE = os.getenv("AUTH0_ADMIN_ROLE", "admin")
 AUTH0_USER_ROLE = os.getenv("AUTH0_USER_ROLE", "user")
 
-try:
-    from auth0.authentication import GetToken
-
-    AUTH0_SDK_AVAILABLE = True
-except ImportError:
-    AUTH0_SDK_AVAILABLE = False
-
 
 class Auth0Manager:
     def __init__(self):
@@ -36,8 +29,8 @@ class Auth0Manager:
         self.user_role = AUTH0_USER_ROLE
 
     def get_login_url(self) -> str:
-        if not AUTH0_SDK_AVAILABLE:
-            raise RuntimeError("Auth0 SDK not installed")
+        if not self.domain or not self.client_id:
+            raise RuntimeError("Auth0 configuration incomplete")
         from urllib.parse import urlencode
         params = {
             "client_id": self.client_id,
@@ -56,17 +49,23 @@ class Auth0Manager:
         )
 
     def get_token(self, code: str) -> dict:
-        if not AUTH0_SDK_AVAILABLE:
-            raise RuntimeError("Auth0 SDK not installed")
-        get_token = GetToken(self.domain, self.client_id, self.client_secret)
-        return get_token.authorization_code(
-            code=code,
-            redirect_uri=self.callback_url,
-        )
+        if not self.domain or not self.client_id or not self.client_secret:
+            raise RuntimeError("Auth0 credentials not configured")
+        token_url = f"https://{self.domain}/oauth/token"
+        payload = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": self.callback_url,
+        }
+        response = requests.post(token_url, json=payload)
+        response.raise_for_status()
+        return response.json()
 
     def get_user_info(self, access_token: str) -> dict:
-        if not AUTH0_SDK_AVAILABLE:
-            raise RuntimeError("Auth0 SDK not installed")
+        if not self.domain:
+            raise RuntimeError("Auth0 domain not configured")
         headers = {"Authorization": f"Bearer {access_token}"}
         response = requests.get(f"https://{self.domain}/userinfo", headers=headers)
         response.raise_for_status()
@@ -94,7 +93,7 @@ class Auth0Manager:
             return None
 
     def get_user_roles(self, user_id: str, access_token: str) -> list:
-        if not AUTH0_SDK_AVAILABLE:
+        if not self.domain:
             return []
         headers = {"Authorization": f"Bearer {access_token}"}
         try:
