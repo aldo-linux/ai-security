@@ -1,4 +1,4 @@
-# AI Security Chatbot
+# CIAM  Chatbot
 
 A Streamlit chatbot with a LangGraph agent backend featuring Auth0 authentication.
 

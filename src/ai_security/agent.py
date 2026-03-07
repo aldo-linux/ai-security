@@ -4,6 +4,7 @@ from typing import Optional
 from dotenv import load_dotenv
 import requests
 import openai
+import httpx
 
 from ai_security.auth import validate_tool_access_with_context
 
@@ -105,7 +106,7 @@ TOOL_DEFINITIONS = [
 
 def get_all_users() -> str:
     """Get all users from the API."""
-    response = requests.get(BASE_URL)
+    response = requests.get(BASE_URL, verify=False)
     response.raise_for_status()
     users = response.json()
     return f"Found {len(users)} users:\n{users}"
@@ -113,7 +114,7 @@ def get_all_users() -> str:
 
 def get_user(user_id: int) -> str:
     """Get a specific user by ID."""
-    response = requests.get(f"{BASE_URL}/{user_id}")
+    response = requests.get(f"{BASE_URL}/{user_id}", verify=False)
     if response.status_code == 404:
         return f"User with ID {user_id} not found"
     response.raise_for_status()
@@ -136,7 +137,7 @@ def create_user(name: str, username: str, email: str, **kwargs) -> str:
     if kwargs.get("company"):
         payload["company"] = kwargs["company"]
 
-    response = requests.post(BASE_URL, json=payload)
+    response = requests.post(BASE_URL, json=payload, verify=False)
     response.raise_for_status()
     return f"User created successfully:\n{response.json()}"
 
@@ -153,7 +154,7 @@ def update_user(user_id: int, name: str = None, email: str = None, **kwargs) -> 
     if kwargs.get("website"):
         payload["website"] = kwargs["website"]
 
-    response = requests.put(f"{BASE_URL}/{user_id}", json=payload)
+    response = requests.put(f"{BASE_URL}/{user_id}", json=payload, verify=False)
     if response.status_code == 404:
         return f"User with ID {user_id} not found"
     response.raise_for_status()
@@ -162,7 +163,7 @@ def update_user(user_id: int, name: str = None, email: str = None, **kwargs) -> 
 
 def delete_user(user_id: int) -> str:
     """Delete a user by ID."""
-    response = requests.delete(f"{BASE_URL}/{user_id}")
+    response = requests.delete(f"{BASE_URL}/{user_id}", verify=False)
     if response.status_code == 404:
         return f"User with ID {user_id} not found"
     response.raise_for_status()
@@ -182,13 +183,14 @@ def create_client() -> openai.OpenAI:
     return openai.OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
         base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+        http_client=httpx.Client(verify=False)
     )
 
 
 def execute_tool(tool_name: str, arguments: dict, user_role: Optional[str]) -> str:
     if not validate_tool_access_with_context(tool_name, user_role):
         raise PermissionError(
-            f"Access denied: You don't have permission to execute '{tool_name}'. "
+            f"You don't have permission to execute '{tool_name}'. "
             f"Admin role is required for this operation."
         )
 

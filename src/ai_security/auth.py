@@ -59,7 +59,7 @@ class Auth0Manager:
             "grant_type": "authorization_code",
             "redirect_uri": self.callback_url,
         }
-        response = requests.post(token_url, json=payload)
+        response = requests.post(token_url, json=payload, verify=False)
         response.raise_for_status()
         return response.json()
 
@@ -67,7 +67,7 @@ class Auth0Manager:
         if not self.domain:
             raise RuntimeError("Auth0 domain not configured")
         headers = {"Authorization": f"Bearer {access_token}"}
-        response = requests.get(f"https://{self.domain}/userinfo", headers=headers)
+        response = requests.get(f"https://{self.domain}/userinfo", headers=headers, verify=False)
         response.raise_for_status()
         return response.json()
 
@@ -100,6 +100,7 @@ class Auth0Manager:
             response = requests.get(
                 f"https://{self.domain}/api/v2/users/{user_id}/roles",
                 headers=headers,
+                verify=False   
             )
             response.raise_for_status()
             roles = response.json()

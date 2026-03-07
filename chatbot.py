@@ -43,11 +43,15 @@ def login_ui():
         unsafe_allow_html=True,
     )
 
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.image("logos/logo.png", width=150)
+    
     st.markdown(
         """
         <div class="login-container">
-            <h1>AI Security Chatbot</h1>
-            <p>Please log in to continue</p>
+            <h1>CIAM  Chatbot</h1>
+            <p>Please sign in to continue</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -66,7 +70,7 @@ def login_ui():
                     border-radius: 4px;
                     font-size: 16px;
                     cursor: pointer;
-                ">Log in with Auth0</button>
+                ">Sign In</button>
             </a>
         </div>
         """,
@@ -140,7 +144,7 @@ def handle_callback():
 
 def main():
     st.set_page_config(
-        page_title="AI Security Chatbot",
+        page_title="CIAM Chatbot",
         page_icon="🔒",
     )
 
@@ -151,8 +155,12 @@ def main():
         login_ui()
         return
 
-    st.title("AI Security Chatbot")
-    st.markdown("An OpenAI-powered chatbot backend with Auth0 authentication")
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.image("logos/logo.png", width=150)
+    
+    st.title("CIAM Chatbot")
+    st.markdown("CIAM Operations Chatbot with Role-Based Access Control")
 
     logout_ui()
 
