@@ -1,14 +1,12 @@
 [project]
 name = "ai-security"
 version = "0.1.0"
-description = "Streamlit chatbot with LangGraph agent backend"
+description = "Streamlit chatbot with OpenAI agent backend"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "streamlit>=1.40.0",
-    "langgraph>=0.2.0",
-    "langchain-core>=0.3.0",
-    "langchain-openai>=0.2.0",
+    "openai>=1.0.0",
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
     "PyJWT>=2.8.0",

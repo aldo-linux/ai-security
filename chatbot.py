@@ -152,7 +152,7 @@ def main():
         return
 
     st.title("AI Security Chatbot")
-    st.markdown("A LangGraph-powered chatbot backend with Auth0 authentication")
+    st.markdown("An OpenAI-powered chatbot backend with Auth0 authentication")
 
     logout_ui()
 
@@ -168,7 +168,11 @@ def main():
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    response = run_agent(prompt, st.session_state.messages[:-1], user_role=st.session_state.user_role)
+                    response = run_agent(
+                        prompt,
+                        st.session_state.messages[:-1],
+                        user_role=st.session_state.user_role,
+                    )
                     st.markdown(response)
                     st.session_state.messages.append(
                         {"role": "assistant", "content": response}
